@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Price History</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <canvas id="stockChart" width="800" height="400"></canvas>
+    
+    <script>
+        async function getStockData(symbol) {
+            const apiKey = 'YOUR_ALPHA_VANTAGE_API_KEY'; // Insira sua chave da API Alpha Vantage aqui
+            const apiUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                return data['Time Series (Daily)'];
+            } catch (error) {
+                console.error('Erro ao buscar os dados:', error);
+                return null;
+            }
+        }
+
+        async function plotStockChart(symbol) {
+            const stockData = await getStockData(symbol);
+
+            if (stockData) {
+                const dates = Object.keys(stockData).reverse();
+                const prices = dates.map(date => parseFloat(stockData[date]['4. close']));
+
+                const ctx = document.getElementById('stockChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: dates,
+                        datasets: [{
+                            label: 'Close Price (USD)',
+                            data: prices,
+                            borderColor: 'blue',
+                            backgroundColor: 'transparent'
+                        }]
+                    },
+                    options: {
+                        responsive: false,
+                        maintainAspectRatio: false
+                    }
+                });
+            }
+        }
+
+        window.onload = function() {
+            const symbol = prompt('Digite o símbolo da ação (por exemplo, AAPL):').toUpperCase();
+            plotStockChart(symbol);
+        };
+    </script>
+</body>
+</html>
